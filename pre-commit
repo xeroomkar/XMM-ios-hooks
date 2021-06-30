@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# COLOURS CONTROL PANEL
+RED="\e[1;31m"
+RESET="\e[0m"
+
+## PREVENT DIRECT COMMIT TO MAIN/DEVELOP
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+
+if [ "$branch" = "main" ] || [ "$branch" = "develop" ]; then
+	printf "${RED}STOP!${RESET} You are trying commit to the $branch branch, try creating a feature or bugfix branch instead?${RESET}\n"
+	exit 1
+fi

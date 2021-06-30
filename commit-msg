@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# COLOURS CONTROL PANEL
+YELLOW="\e[1;33m"
+RED="\e[1;31m"
+RESET="\e[0m"
+
+## CHECK JIRA TICKET IN BRANCH NAME, IN COMMIT MSG, AND THAT THEY MATCH
+
+BRANCH_NAME="$(git branch --show-current)"
+TICKET_PATTERN=XMM-[0-9]{1,3}
+
+if [[ $BRANCH_NAME =~ $TICKET_PATTERN ]]; then
+	JIRA_TICKET="$BASH_REMATCH"
+
+	INPUT_FILE=$1
+	START_LINE=`head -n1 $INPUT_FILE`
+	if ! [[ "$START_LINE" == "[$JIRA_TICKET]"* ]]; then
+		printf "${RED}BAD COMMIT MSG${RESET} - prefix the correct Jira ticket to your commit, as per your branch name, like so: ${YELLOW}[$JIRA_TICKET] commit message${RESET}\n"
+		exit 1
+	fi
+else
+	printf "${RED}BAD BRANCH NAME${RESET} - the beginning of your branch name must follow the format(s):${YELLOW} feature/<jira_ticket_here>${RESET},${YELLOW} bugfix/<jira_ticket_here>${RESET}\n"
+	exit 1
+fi
+

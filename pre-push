@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# COLOURS CONTROL PANEL
+GREEN="\e[1;32m"
+YELLOW="\e[1;33m"
+RED="\e[1;31m"
+RESET="\e[0m"
+
+## VALIDATE BUILD & TEST
+
+IFS='
+'
+
+function get_device_id() {
+	ID_PATTERN=[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}
+	for i in $(xcrun simctl list | grep iPhone); do
+		if [[ $i == *"iPhone"* && $i != *"Booted"* ]]; then
+			if [[ $i =~ $ID_PATTERN ]]; then
+				echo $BASH_REMATCH
+				return 0
+			fi
+		fi
+	done
+
+	return 1
+}
+
+scheme=XeroMe-Thin
+workspace=XeroMe.xcworkspace
+destination_id=$(get_device_id)
+
+if [ $? -ne 0 ]; then
+	printf "${RED}ERROR finding suitable unbooted device for testing${RESET}\n"
+	exit 1
+fi
+
+xcodebuild -quiet -workspace $workspace -scheme $scheme build COMPILER_INDEX_STORE_ENABLE=NO test -destination id=$destination_id 
+if test $? -eq 0
+	then printf "${YELLOW}BUILD & TEST${RESET} for scheme $scheme was${GREEN} successful!${RESET}\n"
+else 
+	printf "${YELLOW}XCode BUILD & TEST${RESET} for scheme $scheme has${RED} failed${RESET}\n"
+	exit 1
+fi
